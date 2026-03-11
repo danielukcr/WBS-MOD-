@@ -1,132 +1,149 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Westbrook Secondary Moderation Logger</title>
+<title>Westbrook Secondary Terminal</title>
+
 <style>
 body{
-    background:#0f172a;
-    font-family:monospace;
-    color:white;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
+    background:black;
+    color:#00ff00;
+    font-family:Consolas, monospace;
+    padding:20px;
 }
-.panel{
-    background:#1e293b;
-    padding:25px;
-    border-radius:10px;
-    width:400px;
+
+#terminal{
+    white-space:pre-line;
 }
-input,select,button{
-    width:100%;
-    margin-top:8px;
-    padding:8px;
+
+input{
+    background:black;
     border:none;
-    border-radius:5px;
-}
-button{
-    background:#2563eb;
-    color:white;
-    cursor:pointer;
-}
-button:hover{
-    background:#1d4ed8;
+    color:#00ff00;
+    font-family:Consolas, monospace;
+    outline:none;
+    width:300px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="panel">
-
-<h2>Westbrook Secondary</h2>
-
-<label>Staff Username</label>
-<input id="staff">
-
-<label>Discord Username</label>
-<input id="duser">
-
-<label>Discord ID</label>
-<input id="did">
-
-<label>Roblox Username</label>
-<input id="ruser">
-
-<label>Type</label>
-<select id="type" onchange="checkBan()">
-<option>warning</option>
-<option>verbal warning</option>
-<option>kick</option>
-<option>ban</option>
-<option>temporary ban</option>
-<option>permanent ban</option>
-<option>blacklist</option>
-</select>
-
-<div id="tempBanBox" style="display:none;">
-<label>Unban Date</label>
-<input id="unban">
-</div>
-
-<label>Reason</label>
-<input id="reason">
-
-<br><br>
-<button onclick="sendLog()">Send Log</button>
-
-</div>
+<div id="terminal"></div>
+<input id="input" autofocus>
 
 <script>
 
-function checkBan(){
-    let type = document.getElementById("type").value;
-    let box = document.getElementById("tempBanBox");
+const webhook = "https://discord.com/api/v10/webhooks/1481135662454407189/apMsgafcg7mSROI9vqtDSbrPJV7lAFpaHQ8pZKF6_QjnPiw2hBg45LCdVfmgjyjGl6PI";
 
-    if(type === "temporary ban"){
-        box.style.display="block";
-    }else{
-        box.style.display="none";
-    }
+let step = 0;
+
+let data = {};
+
+const terminal = document.getElementById("terminal");
+const input = document.getElementById("input");
+
+function print(text){
+    terminal.innerHTML += text + "\n";
 }
 
-function sendLog(){
+print("Westbrook Secondary Moderation System");
+print("");
+print("Enter your username:");
 
-const webhook = "PASTE_WEBHOOK_HERE";
+input.addEventListener("keydown", function(e){
 
-let staff = document.getElementById("staff").value;
-let duser = document.getElementById("duser").value;
-let did = document.getElementById("did").value;
-let ruser = document.getElementById("ruser").value;
-let type = document.getElementById("type").value;
-let reason = document.getElementById("reason").value;
-let unban = document.getElementById("unban").value || "N/A";
+if(e.key === "Enter"){
+
+let value = input.value;
+input.value="";
+
+if(step === 0){
+data.staff = value;
+print("Loading...");
+setTimeout(()=>{
+print("");
+print("Moderation Panel Loaded");
+print("");
+print("Discord Username:");
+},1000);
+step=1;
+return;
+}
+
+if(step === 1){
+data.discordUser = value;
+print("Discord ID:");
+step=2;
+return;
+}
+
+if(step === 2){
+data.discordID = value;
+print("Roblox Username:");
+step=3;
+return;
+}
+
+if(step === 3){
+data.roblox = value;
+print("Type (warning, verbal warning, kick, ban, temporary ban, permanent ban, blacklist):");
+step=4;
+return;
+}
+
+if(step === 4){
+data.type = value;
+
+if(value.toLowerCase() === "temporary ban"){
+print("When should they be unbanned?");
+step=5;
+}else{
+data.unban="N/A";
+print("Reason:");
+step=6;
+}
+
+return;
+}
+
+if(step === 5){
+data.unban = value;
+print("Reason:");
+step=6;
+return;
+}
+
+if(step === 6){
+data.reason = value;
+
+print("");
+print("Sending log to Discord...");
 
 let message =
 `**Westbrook Secondary Moderation Log**
 
-Staff: ${staff}
-Discord Username: ${duser}
-Discord ID: ${did}
-Roblox Username: ${ruser}
-Type: ${type}
-Unban Date: ${unban}
-Reason: ${reason}`;
+Staff: ${data.staff}
+Discord Username: ${data.discordUser}
+Discord ID: ${data.discordID}
+Roblox Username: ${data.roblox}
+Type: ${data.type}
+Unban Date: ${data.unban}
+Reason: ${data.reason}`;
 
 fetch(webhook,{
 method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-content: message
-})
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({content:message})
 });
 
-alert("Log sent to Discord!");
+print("Log sent successfully.");
+
+step=7;
+}
 
 }
+
+});
 
 </script>
 
